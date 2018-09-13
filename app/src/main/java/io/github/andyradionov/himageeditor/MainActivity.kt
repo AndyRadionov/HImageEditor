@@ -12,6 +12,7 @@ import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
@@ -20,19 +21,52 @@ import java.io.IOException
 class MainActivity : AppCompatActivity() {
     private val REQUEST_IMAGE_CAPTURE = 1
     private val REQUEST_STORAGE_PERMISSION = 1
-
     private val FILE_PROVIDER_AUTHORITY = "io.github.andyradionov.himageeditor.fileprovider"
 
-    private var mTempPhotoPath: String? = null
-
-    private var mResultsBitmap: Bitmap? = null
-    private var mPublicURI: Uri? = null
+    private var tempPhotoPath: String? = null
+    private var initialBitmap: Bitmap? = null
+    private var processedBitmap: Bitmap? = null
+    private var publicURI: Uri? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        btn_take_pic.setOnClickListener {
+        initListeners()
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
+                                            grantResults: IntArray) {
+        // Called when you request permission to read and write to external storage
+        when (requestCode) {
+            REQUEST_STORAGE_PERMISSION -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // If you get permission, launch the camera
+                    launchCamera()
+                } else {
+                    // If you do not get permission, show a Toast
+                    Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        // If the image capture activity was called and was successful
+        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
+            // Process the image and set it to the TextView
+            btnTakePic.visibility = View.INVISIBLE
+            processAndSetImage()
+        } else {
+
+            // Otherwise, delete the temporary image file
+            BitmapUtils.deleteImageFile(this, tempPhotoPath)
+        }
+    }
+
+    private fun initListeners() {
+
+        btnTakePic.setOnClickListener {
             if (ContextCompat.checkSelfPermission(this,
                             Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
@@ -45,58 +79,33 @@ class MainActivity : AppCompatActivity() {
                 launchCamera()
             }
         }
-        btn_save_img.setOnClickListener {
-            BitmapUtils.deleteImageFile(this, mTempPhotoPath)
+
+        btnSaveImg.setOnClickListener {
+            BitmapUtils.deleteImageFile(this, tempPhotoPath)
 
             // Save the image
-            BitmapUtils.saveImage(this, mResultsBitmap)
-            val path = MediaStore.Images.Media.insertImage(contentResolver, mResultsBitmap, "Emojify image", "Emojify image")
-            mPublicURI = Uri.parse(path)
+            val saveBitmap = if (processedBitmap != null) processedBitmap else initialBitmap
+            BitmapUtils.saveImage(this, saveBitmap)
+            val path = MediaStore.Images.Media.insertImage(contentResolver, saveBitmap, "HImageEditor", "HImageEditor")
+            publicURI = Uri.parse(path)
         }
 
-        btn_rotate.setOnClickListener {
-            mResultsBitmap = BitmapUtils.rotate(mResultsBitmap)
-            iv_picture.setImageBitmap(mResultsBitmap)
+        btnRotate.setOnClickListener {
+            val bitmapToProcess = if (processedBitmap != null) processedBitmap else initialBitmap
+            processedBitmap = BitmapUtils.rotate(bitmapToProcess)
+            ivResultImage.setImageBitmap(processedBitmap)
         }
 
-        btn_mirror.setOnClickListener {
-            mResultsBitmap = BitmapUtils.flip(mResultsBitmap)
-            iv_picture.setImageBitmap(mResultsBitmap)
+        btnMirror.setOnClickListener {
+            val bitmapToProcess = if (processedBitmap != null) processedBitmap else initialBitmap
+            processedBitmap = BitmapUtils.flip(bitmapToProcess)
+            ivResultImage.setImageBitmap(processedBitmap)
         }
 
-        btn_invert.setOnClickListener {
-            mResultsBitmap = BitmapUtils.invertColors(mResultsBitmap)
-            iv_picture.setImageBitmap(mResultsBitmap)
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
-                                            grantResults: IntArray) {
-        // Called when you request permission to read and write to external storage
-        when (requestCode) {
-            REQUEST_STORAGE_PERMISSION -> {
-                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // If you get permission, launch the camera
-                    launchCamera()
-                } else {
-                    // If you do not get permission, show a Toast
-                    Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        // If the image capture activity was called and was successful
-        if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
-            // Process the image and set it to the TextView
-            processAndSetImage()
-        } else {
-
-            // Otherwise, delete the temporary image file
-            BitmapUtils.deleteImageFile(this, mTempPhotoPath)
+        btnInvert.setOnClickListener {
+            val bitmapToProcess = if (processedBitmap != null) processedBitmap else initialBitmap
+            processedBitmap = BitmapUtils.invertColors(bitmapToProcess)
+            ivResultImage.setImageBitmap(processedBitmap)
         }
     }
 
@@ -106,17 +115,17 @@ class MainActivity : AppCompatActivity() {
     private fun processAndSetImage() {
 
         // Toggle Visibility of the views
-        btn_invert.isEnabled = true
-        btn_rotate.isEnabled = true
-        btn_mirror.isEnabled = true
-        btn_save_img.isEnabled = true
+        btnInvert.isEnabled = true
+        btnRotate.isEnabled = true
+        btnMirror.isEnabled = true
+        btnSaveImg.isEnabled = true
 
         // Resample the saved image to fit the ImageView
-        mResultsBitmap = BitmapUtils.resamplePic(this, mTempPhotoPath)
+        initialBitmap = BitmapUtils.resamplePic(this, tempPhotoPath)
 
 
         // Set the new bitmap to the ImageView
-        iv_picture.setImageBitmap(mResultsBitmap)
+        ivPicture.setImageBitmap(initialBitmap)
     }
 
 
@@ -140,7 +149,7 @@ class MainActivity : AppCompatActivity() {
             if (photoFile != null) {
 
                 // Get the path of the temporary file
-                mTempPhotoPath = photoFile.absolutePath
+                tempPhotoPath = photoFile.absolutePath
 
                 // Get the content URI for the image file
                 val photoURI = FileProvider.getUriForFile(this,
