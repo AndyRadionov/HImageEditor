@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 
-package io.github.andyradionov.himageeditor;
+package io.github.andyradionov.himageeditor.utils;
 
 import android.content.Context;
 import android.content.Intent;
@@ -37,9 +37,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
-class BitmapUtils {
+import io.github.andyradionov.himageeditor.R;
+
+public class BitmapUtils {
     private static String FILE_PROVIDER_AUTHORITY = "io.github.andyradionov.himageeditor.fileprovider";
 
     private static final float[] NEGATIVE = {
@@ -56,7 +59,7 @@ class BitmapUtils {
      * @param imagePath The path of the photo to be resampled.
      * @return The resampled bitmap
      */
-    static Bitmap resamplePic(Context context, String imagePath) {
+    public static Bitmap resamplePic(Context context, String imagePath) {
 
         // Get device screen size information
         DisplayMetrics metrics = new DisplayMetrics();
@@ -83,7 +86,7 @@ class BitmapUtils {
         return BitmapFactory.decodeFile(imagePath);
     }
 
-    static Bitmap invertColors(Bitmap inputBitmap) {
+    public static Bitmap invertColors(Bitmap inputBitmap) {
 
         ColorMatrixColorFilter colorFilter = new ColorMatrixColorFilter(NEGATIVE);
         Paint paint = new Paint();
@@ -98,7 +101,7 @@ class BitmapUtils {
         return resultBitmap;
     }
 
-    static Bitmap grayScale(Bitmap inputBitmap) {
+    public static Bitmap grayScale(Bitmap inputBitmap) {
 
         ColorMatrix cm = new ColorMatrix();
         cm.setSaturation(0);
@@ -114,7 +117,7 @@ class BitmapUtils {
         return resultBitmap;
     }
 
-    static Bitmap flip(Bitmap inputBitmap) {
+    public static Bitmap flip(Bitmap inputBitmap) {
         Matrix matrix = new Matrix();
         matrix.preScale(-1.0f, 1.0f);
         return Bitmap.createBitmap(
@@ -122,7 +125,14 @@ class BitmapUtils {
 
     }
 
-    static Bitmap rotate(Bitmap inputBitmap) {
+    public static void freeBitmap(Bitmap bitmap) {
+        if (bitmap != null) {
+            bitmap.recycle();
+            bitmap = null;
+        }
+    }
+
+    public static Bitmap rotate(Bitmap inputBitmap) {
         Matrix matrix = new Matrix();
 
         matrix.postRotate(90);
@@ -136,7 +146,7 @@ class BitmapUtils {
      * @return The temporary image file.
      * @throws IOException Thrown if there is an error creating the file
      */
-    static File createTempImageFile(Context context) throws IOException {
+    public static File createTempImageFile(Context context) throws IOException {
         String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",
                 Locale.getDefault()).format(new Date());
         String imageFileName = "JPEG_" + timeStamp + "_";
@@ -149,18 +159,34 @@ class BitmapUtils {
         );
     }
 
+    public static String saveTempBitmap(Context context, Bitmap image) {
+        try {
+            File imageFile = createTempImageFile(context);
+            return writeFile(imageFile, image);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
     /**
      * Deletes image file for a given path.
      *
-     * @param context   The application context.
      * @param imagePath The path of the photo to be deleted.
      */
-    static boolean deleteImageFile(Context context, String imagePath) {
+    public static boolean deleteImageFile(String imagePath) {
         // Get the file
         File imageFile = new File(imagePath);
 
         // Delete the image
         return imageFile.delete();
+    }
+
+    public static boolean deleteTempFiles(List<String> imagePaths) {
+        for (String imagePath: imagePaths) {
+            if (deleteImageFile(imagePath)) return false;
+        }
+        return true;
     }
 
     /**
@@ -185,7 +211,7 @@ class BitmapUtils {
      * @param image   The image to be saved.
      * @return The path of the saved image.
      */
-    static String saveImage(Context context, Bitmap image) {
+    public static String saveImage(Context context, Bitmap image) {
 
         String savedImagePath = null;
 
@@ -203,15 +229,7 @@ class BitmapUtils {
 
         // Save the new Bitmap
         if (success) {
-            File imageFile = new File(storageDir, imageFileName);
-            savedImagePath = imageFile.getAbsolutePath();
-            try {
-                OutputStream fOut = new FileOutputStream(imageFile);
-                image.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
-                fOut.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            savedImagePath = writeFile(storageDir, imageFileName, image);
 
             // Add the image to the system gallery
             galleryAddPic(context, savedImagePath);
@@ -224,4 +242,20 @@ class BitmapUtils {
         return savedImagePath;
     }
 
+    private static String writeFile(File storageDir, String imageFileName, Bitmap image) {
+        File imageFile = new File(storageDir, imageFileName);
+        return writeFile(imageFile, image);
+    }
+
+    private static String writeFile(File imageFile, Bitmap image) {
+        String savedImagePath = imageFile.getAbsolutePath();
+        try {
+            OutputStream fOut = new FileOutputStream(imageFile);
+            image.compress(Bitmap.CompressFormat.JPEG, 100, fOut);
+            fOut.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return savedImagePath;
+    }
 }

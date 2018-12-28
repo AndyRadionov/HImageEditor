@@ -5,33 +5,41 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.Toast
+import io.github.andyradionov.himageeditor.utils.BitmapUtils
+import io.github.andyradionov.himageeditor.utils.HistoryHelper
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.io.IOException
 
-class MainActivity : AppCompatActivity() {
-    private val REQUEST_IMAGE_CAPTURE = 1
-    private val REQUEST_STORAGE_PERMISSION = 1
-    private val FILE_PROVIDER_AUTHORITY = "io.github.andyradionov.himageeditor.fileprovider"
+private const val REQUEST_IMAGE_CAPTURE = 1
+private const val REQUEST_STORAGE_PERMISSION = 1
+private const val FILE_PROVIDER_AUTHORITY = "io.github.andyradionov.himageeditor.fileprovider"
 
-    private var tempPhotoPath: String? = null
-    private var initialBitmap: Bitmap? = null
-    private var processedBitmap: Bitmap? = null
-    private var publicURI: Uri? = null
+class MainActivity : AppCompatActivity() {
+
+    private var photoPath: String? = null
+    private val images = ArrayList<String>()
+    private lateinit var imagesAdapter: ImagesAdapter
+    private val imageClickListener = object: ImagesAdapter.ImageClickListener {
+        override fun onClick(imagePath: String) {
+
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        setupRecycler()
         initListeners()
     }
 
@@ -60,7 +68,7 @@ class MainActivity : AppCompatActivity() {
         } else {
 
             // Otherwise, delete the temporary image file
-            BitmapUtils.deleteImageFile(this, tempPhotoPath)
+            BitmapUtils.deleteImageFile(photoPath)
         }
     }
 
@@ -81,36 +89,44 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnSaveImg.setOnClickListener {
-            BitmapUtils.deleteImageFile(this, tempPhotoPath)
 
             // Save the image
-            val saveBitmap = if (processedBitmap != null) processedBitmap else initialBitmap
+            val saveBitmap = BitmapUtils.resamplePic(this, photoPath)
+            BitmapUtils.deleteImageFile(photoPath)
+            BitmapUtils.deleteTempFiles(images)
+            images.clear()
+            imagesAdapter.notifyDataSetChanged()
             BitmapUtils.saveImage(this, saveBitmap)
+            BitmapUtils.freeBitmap(saveBitmap)
             val path = MediaStore.Images.Media.insertImage(contentResolver, saveBitmap, "HImageEditor", "HImageEditor")
-            publicURI = Uri.parse(path)
+            HistoryHelper.updateHistoryList(this, path)
         }
 
         btnRotate.setOnClickListener {
-            val bitmapToProcess = if (processedBitmap != null) processedBitmap else initialBitmap
-            processedBitmap = BitmapUtils.rotate(bitmapToProcess)
-            ivResultImage.setImageBitmap(processedBitmap)
+            processClick { bitmap -> BitmapUtils.rotate(bitmap) }
         }
 
         btnMirror.setOnClickListener {
-            val bitmapToProcess = if (processedBitmap != null) processedBitmap else initialBitmap
-            processedBitmap = BitmapUtils.flip(bitmapToProcess)
-            ivResultImage.setImageBitmap(processedBitmap)
+            processClick { bitmap -> BitmapUtils.flip(bitmap) }
         }
 
         btnInvert.setOnClickListener {
-            val bitmapToProcess = if (processedBitmap != null) processedBitmap else initialBitmap
-            processedBitmap = BitmapUtils.invertColors(bitmapToProcess)
-            ivResultImage.setImageBitmap(processedBitmap)
+            processClick { bitmap -> BitmapUtils.invertColors(bitmap) }
         }
     }
 
+    private fun processClick(func: (bitmap: Bitmap) -> Bitmap) {
+        val bitmap = BitmapUtils.resamplePic(this, photoPath)
+        val processedBitmap = func(bitmap)
+        val path = BitmapUtils.saveTempBitmap(this, processedBitmap)
+        BitmapUtils.freeBitmap(bitmap)
+        BitmapUtils.freeBitmap(processedBitmap)
+        images.add(0, path)
+        imagesAdapter.notifyDataSetChanged()
+    }
+
     /**
-     * Method for processing the captured image and setting it to the TextView.
+     * Method for processing the captured image and setting it to the ImageView.
      */
     private fun processAndSetImage() {
 
@@ -121,11 +137,11 @@ class MainActivity : AppCompatActivity() {
         btnSaveImg.isEnabled = true
 
         // Resample the saved image to fit the ImageView
-        initialBitmap = BitmapUtils.resamplePic(this, tempPhotoPath)
+        val bitmap = BitmapUtils.resamplePic(this, photoPath)
 
 
         // Set the new bitmap to the ImageView
-        ivPicture.setImageBitmap(initialBitmap)
+        ivPicture.setImageBitmap(bitmap)
     }
 
 
@@ -149,7 +165,7 @@ class MainActivity : AppCompatActivity() {
             if (photoFile != null) {
 
                 // Get the path of the temporary file
-                tempPhotoPath = photoFile.absolutePath
+                photoPath = photoFile.absolutePath
 
                 // Get the content URI for the image file
                 val photoURI = FileProvider.getUriForFile(this,
@@ -163,5 +179,13 @@ class MainActivity : AppCompatActivity() {
                 startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
             }
         }
+    }
+
+    private fun setupRecycler() {
+        imagesAdapter = ImagesAdapter(imageClickListener, images)
+
+        val layoutManager = LinearLayoutManager(this)
+        recycler.adapter = imagesAdapter
+        recycler.layoutManager = layoutManager
     }
 }
