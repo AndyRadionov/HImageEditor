@@ -137,7 +137,7 @@ class MainActivity : AppCompatActivity() {
         btnSaveImg.isEnabled = true
 
         // Resample the saved image to fit the ImageView
-        val bitmap = BitmapUtils.resamplePic(this, photoPath)
+        val bitmap = BitmapUtils.scalePic(this, photoPath, 160f)
 
 
         // Set the new bitmap to the ImageView

@@ -86,6 +86,33 @@ public class BitmapUtils {
         return BitmapFactory.decodeFile(imagePath);
     }
 
+    public static Bitmap scalePic(Context context, String imagePath, float imgHeightDp) {
+
+        float pixelsHeight = convertDpToPixel(imgHeightDp, context);
+
+        // Get the dimensions of the original bitmap
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        //bmOptions.inJustDecodeBounds = true;
+        Bitmap bitmap = BitmapFactory.decodeFile(imagePath, bmOptions);
+        int photoH = bmOptions.outHeight;
+        int photoW = bmOptions.outWidth;
+
+        // Determine how much to scale down the image
+        int scaleFactor = (int) (photoH / pixelsHeight);
+        int newW = (int) Math.floor(photoW / scaleFactor);
+
+        // Decode the image file into a Bitmap sized to fill the View
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+
+        return Bitmap.createScaledBitmap(bitmap, newW, (int) pixelsHeight, true);
+        //return BitmapFactory.decodeFile(imagePath);
+    }
+
+    private static float convertDpToPixel(float dp, Context context){
+        return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+    }
+
     public static Bitmap invertColors(Bitmap inputBitmap) {
 
         ColorMatrixColorFilter colorFilter = new ColorMatrixColorFilter(NEGATIVE);

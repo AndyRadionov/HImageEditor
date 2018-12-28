@@ -6,6 +6,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import io.github.andyradionov.himageeditor.utils.BitmapUtils
 import kotlinx.android.synthetic.main.item_image.view.*
 
 
@@ -32,7 +33,9 @@ class ImagesAdapter(
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
         val imgPath = images[position]
-        holder.itemView.resultPic.setImageURI(Uri.parse(imgPath))
+        //holder.itemView.resultPic.setImageURI(Uri.parse(imgPath))
+        val bitmap = BitmapUtils.scalePic(holder.itemView.context, imgPath, 160f)
+        holder.itemView.resultPic.setImageBitmap(bitmap)
     }
 
     inner class ImageViewHolder(itemView: View): RecyclerView.ViewHolder(itemView),
