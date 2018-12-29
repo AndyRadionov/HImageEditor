@@ -4,6 +4,7 @@ import android.content.Context
 import android.preference.PreferenceManager
 import io.github.andyradionov.himageeditor.R
 import java.util.*
+import kotlin.collections.HashSet
 
 /**
  * @author Andrey Radionov
@@ -14,8 +15,8 @@ object HistoryHelper {
     fun loadHistory(context: Context): MutableList<String> {
         val sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context)
         val defSet = HashSet<String>()
-        val history = sharedPrefs.getStringSet(context.getString(R.string.history_key), defSet)
-        val result = ArrayList(history!!)
+        val history = sharedPrefs.getStringSet(context.getString(R.string.history_key), defSet) as Set<String>
+        val result = ArrayList(history)
         result.sortDescending()
         return result
     }

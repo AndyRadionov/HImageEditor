@@ -43,7 +43,6 @@ import java.util.Locale;
 import io.github.andyradionov.himageeditor.R;
 
 public class BitmapUtils {
-    private static String FILE_PROVIDER_AUTHORITY = "io.github.andyradionov.himageeditor.fileprovider";
 
     private static final float[] NEGATIVE = {
             -1.0f,     0,     0,    0, 255, // red
@@ -99,18 +98,12 @@ public class BitmapUtils {
 
         // Determine how much to scale down the image
         int scaleFactor = (int) (photoH / pixelsHeight);
-        int newW = (int) Math.floor(photoW / scaleFactor);
+        int newWidth = (int) Math.floor(photoW / scaleFactor);
 
-        // Decode the image file into a Bitmap sized to fill the View
         bmOptions.inJustDecodeBounds = false;
         bmOptions.inSampleSize = scaleFactor;
 
-        return Bitmap.createScaledBitmap(bitmap, newW, (int) pixelsHeight, true);
-        //return BitmapFactory.decodeFile(imagePath);
-    }
-
-    private static float convertDpToPixel(float dp, Context context){
-        return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+        return Bitmap.createScaledBitmap(bitmap, newWidth, (int) pixelsHeight, true);
     }
 
     public static Bitmap invertColors(Bitmap inputBitmap) {
@@ -150,13 +143,6 @@ public class BitmapUtils {
         return Bitmap.createBitmap(
                 inputBitmap, 0, 0, inputBitmap.getWidth(), inputBitmap.getHeight(), matrix, true);
 
-    }
-
-    public static void freeBitmap(Bitmap bitmap) {
-        if (bitmap != null) {
-            bitmap.recycle();
-            bitmap = null;
-        }
     }
 
     public static Bitmap rotate(Bitmap inputBitmap) {
@@ -217,21 +203,6 @@ public class BitmapUtils {
     }
 
     /**
-     * Helper method for adding the photo to the system photo gallery so it can be accessed
-     * from other apps.
-     *
-     * @param imagePath The path of the saved image
-     */
-    private static void galleryAddPic(Context context, String imagePath) {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        File f = new File(imagePath);
-        Uri contentUri = Uri.fromFile(f);
-        mediaScanIntent.setData(contentUri);
-        context.sendBroadcast(mediaScanIntent);
-    }
-
-
-    /**
      * Helper method for saving the image.
      *
      * @param context The application context.
@@ -269,6 +240,10 @@ public class BitmapUtils {
         return savedImagePath;
     }
 
+    private static float convertDpToPixel(float dp, Context context){
+        return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
+    }
+
     private static String writeFile(File storageDir, String imageFileName, Bitmap image) {
         File imageFile = new File(storageDir, imageFileName);
         return writeFile(imageFile, image);
@@ -284,5 +259,19 @@ public class BitmapUtils {
             e.printStackTrace();
         }
         return savedImagePath;
+    }
+
+    /**
+     * Helper method for adding the photo to the system photo gallery so it can be accessed
+     * from other apps.
+     *
+     * @param imagePath The path of the saved image
+     */
+    private static void galleryAddPic(Context context, String imagePath) {
+        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+        File f = new File(imagePath);
+        Uri contentUri = Uri.fromFile(f);
+        mediaScanIntent.setData(contentUri);
+        context.sendBroadcast(mediaScanIntent);
     }
 }

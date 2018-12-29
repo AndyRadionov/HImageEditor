@@ -31,7 +31,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var imagesAdapter: ImagesAdapter
     private val imageClickListener = object: ImagesAdapter.ImageClickListener {
         override fun onClick(imagePath: String) {
-
+            photoPath = imagePath
+            processAndSetImage()
         }
     }
 
@@ -97,7 +98,6 @@ class MainActivity : AppCompatActivity() {
             images.clear()
             imagesAdapter.notifyDataSetChanged()
             BitmapUtils.saveImage(this, saveBitmap)
-            BitmapUtils.freeBitmap(saveBitmap)
             val path = MediaStore.Images.Media.insertImage(contentResolver, saveBitmap, "HImageEditor", "HImageEditor")
             HistoryHelper.updateHistoryList(this, path)
         }
@@ -119,8 +119,6 @@ class MainActivity : AppCompatActivity() {
         val bitmap = BitmapUtils.resamplePic(this, photoPath)
         val processedBitmap = func(bitmap)
         val path = BitmapUtils.saveTempBitmap(this, processedBitmap)
-        BitmapUtils.freeBitmap(bitmap)
-        BitmapUtils.freeBitmap(processedBitmap)
         images.add(0, path)
         imagesAdapter.notifyDataSetChanged()
     }
