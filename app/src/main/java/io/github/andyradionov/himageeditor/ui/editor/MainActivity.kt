@@ -1,4 +1,4 @@
-package io.github.andyradionov.himageeditor.ui
+package io.github.andyradionov.himageeditor.ui.editor
 
 import android.Manifest
 import android.app.Activity
@@ -15,6 +15,7 @@ import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.Toast
 import io.github.andyradionov.himageeditor.R
+import io.github.andyradionov.himageeditor.ui.common.ImagesAdapter
 import io.github.andyradionov.himageeditor.utils.BitmapUtils
 import io.github.andyradionov.himageeditor.utils.HistoryHelper
 import kotlinx.android.synthetic.main.activity_main.*
