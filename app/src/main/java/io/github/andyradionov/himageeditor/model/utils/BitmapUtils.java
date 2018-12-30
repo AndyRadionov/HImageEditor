@@ -14,7 +14,7 @@
 * limitations under the License.
 */
 
-package io.github.andyradionov.himageeditor.utils;
+package io.github.andyradionov.himageeditor.model.utils;
 
 import android.content.Context;
 import android.content.Intent;

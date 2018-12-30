@@ -2,4 +2,6 @@
     <string name="app_name">HImageEditor</string>
     <string name="permission_denied">Permission Denied!</string>
     <string name="saved_message">Saved</string>
+
+    <string name="history_key">history_key</string>
 </resources>

@@ -7,38 +7,32 @@
     tools:context="io.github.andyradionov.himageeditor.ui.editor.MainActivity">
 
     <android.support.constraint.Guideline
-        android:id="@+id/vertical_guide"
+        android:id="@+id/guide"
         android:layout_width="1dp"
         android:layout_height="match_parent"
-        app:layout_constraintGuide_percent="0.5"
-        android:orientation="vertical"/>
-
-    <android.support.constraint.Guideline
-        android:id="@+id/horizontal_guide"
-        android:layout_width="match_parent"
-        app:layout_constraintGuide_percent="0.4"
-        android:orientation="horizontal"
-        android:layout_height="1dp" />
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.5" />
 
     <ImageView
         android:id="@+id/ivPicture"
-        android:layout_margin="16dp"
         android:layout_width="0dp"
-        android:layout_height="160dp"
-        app:layout_constraintBottom_toTopOf="@id/horizontal_guide"
+        android:layout_height="140dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:src="@drawable/ic_image_black_24dp"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@id/vertical_guide"
+        app:layout_constraintRight_toLeftOf="@id/guide"
         app:layout_constraintTop_toTopOf="parent" />
 
     <Button
         android:id="@+id/btnTakePic"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="16dp"
         android:text="Take picture"
-        app:layout_constraintBottom_toTopOf="@id/horizontal_guide"
+        app:layout_constraintBottom_toBottomOf="@id/btnSaveImg"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toLeftOf="@id/vertical_guide"
-        app:layout_constraintTop_toTopOf="parent"  />
+        app:layout_constraintRight_toLeftOf="@id/guide" />
 
     <Button
         android:id="@+id/btnRotate"
@@ -46,9 +40,9 @@
         android:layout_height="wrap_content"
         android:enabled="false"
         android:text="Rotate"
-        app:layout_constraintTop_toTopOf="@id/ivPicture"
-        app:layout_constraintLeft_toRightOf="@id/vertical_guide"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintLeft_toRightOf="@id/guide"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="@id/ivPicture" />
 
     <Button
         android:id="@+id/btnInvert"
@@ -56,10 +50,9 @@
         android:layout_height="wrap_content"
         android:enabled="false"
         android:text="Invert colors"
-        app:layout_constraintBottom_toTopOf="@id/btnMirror"
-        app:layout_constraintTop_toBottomOf="@id/btnRotate"
-        app:layout_constraintLeft_toRightOf="@id/vertical_guide"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintLeft_toRightOf="@id/guide"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnRotate" />
 
     <Button
         android:id="@+id/btnMirror"
@@ -67,10 +60,9 @@
         android:layout_height="wrap_content"
         android:enabled="false"
         android:text="Mirror image"
-        app:layout_constraintBottom_toBottomOf="@id/btnSaveImg"
-        app:layout_constraintTop_toBottomOf="@id/btnInvert"
-        app:layout_constraintLeft_toRightOf="@id/vertical_guide"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintLeft_toRightOf="@id/guide"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnInvert" />
 
     <Button
         android:id="@+id/btnSaveImg"
@@ -78,17 +70,16 @@
         android:layout_height="wrap_content"
         android:enabled="false"
         android:text="save picture"
-        app:layout_constraintBottom_toBottomOf="@id/ivPicture"
-        app:layout_constraintTop_toBottomOf="@id/btnMirror"
-        app:layout_constraintLeft_toRightOf="@id/vertical_guide"
-        app:layout_constraintRight_toRightOf="parent" />
+        app:layout_constraintLeft_toRightOf="@id/guide"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnMirror" />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/recycler"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/horizontal_guide"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        app:layout_constraintTop_toBottomOf="@id/btnTakePic" />
 </android.support.constraint.ConstraintLayout>

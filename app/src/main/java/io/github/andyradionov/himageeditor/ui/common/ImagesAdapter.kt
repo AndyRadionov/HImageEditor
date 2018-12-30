@@ -6,7 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import io.github.andyradionov.himageeditor.R
-import io.github.andyradionov.himageeditor.utils.BitmapUtils
+import io.github.andyradionov.himageeditor.model.utils.BitmapUtils
 import kotlinx.android.synthetic.main.item_image.view.*
 
 

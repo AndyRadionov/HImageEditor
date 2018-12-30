@@ -16,8 +16,8 @@ import android.view.View
 import android.widget.Toast
 import io.github.andyradionov.himageeditor.R
 import io.github.andyradionov.himageeditor.ui.common.ImagesAdapter
-import io.github.andyradionov.himageeditor.utils.BitmapUtils
-import io.github.andyradionov.himageeditor.utils.HistoryHelper
+import io.github.andyradionov.himageeditor.model.utils.BitmapUtils
+import io.github.andyradionov.himageeditor.model.utils.HistoryHelper
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.io.IOException

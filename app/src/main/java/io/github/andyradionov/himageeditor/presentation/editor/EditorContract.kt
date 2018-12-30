@@ -5,11 +5,11 @@ package io.github.andyradionov.himageeditor.presentation.editor
  */
 interface EditorContract {
 
-    interface EditorPresenter {
+    interface Presenter {
 
     }
 
-    interface EditorView {
+    interface View {
 
     }
 }
