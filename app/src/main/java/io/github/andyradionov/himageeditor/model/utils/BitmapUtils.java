@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -45,6 +46,10 @@ import io.github.andyradionov.himageeditor.R;
 
 public class BitmapUtils {
 
+    private static final DateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.ENGLISH);
+    private static final String IMG_PREFIX = "IMG_";
+    private static final String IMG_SUFFIX = ".jpg";
+    private static final String SMALL_PREFIX = "SMALL_";
     private static final float[] NEGATIVE = {
             -1.0f,     0,     0,    0, 255, // red
             0, -1.0f,     0,    0, 255, // green
@@ -161,14 +166,13 @@ public class BitmapUtils {
      * @throws IOException Thrown if there is an error creating the file
      */
     public static File createTempImageFile(Context context) throws IOException {
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",
-                Locale.getDefault()).format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
+        String timeStamp = TIMESTAMP_FORMAT.format(new Date());
+        String imageFileName = IMG_PREFIX + timeStamp;
         File storageDir = context.getExternalCacheDir();
 
         return File.createTempFile(
                 imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
+                IMG_SUFFIX,         /* suffix */
                 storageDir      /* directory */
         );
     }
@@ -215,9 +219,8 @@ public class BitmapUtils {
         String savedImagePath = null;
 
         // Create the new file in the external storage
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss",
-                Locale.getDefault()).format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + ".jpg";
+        String timeStamp = TIMESTAMP_FORMAT.format(new Date());
+        String imageFileName = IMG_PREFIX + timeStamp + IMG_SUFFIX;
         File storageDir = new File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
                         + BuildConfig.STORE_DIRECTORY);
