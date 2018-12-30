@@ -99,8 +99,7 @@ class MainActivity : AppCompatActivity() {
             BitmapUtils.deleteTempFiles(images)
             images.clear()
             imagesAdapter.notifyDataSetChanged()
-            BitmapUtils.saveImage(this, saveBitmap)
-            val path = MediaStore.Images.Media.insertImage(contentResolver, saveBitmap, "HImageEditor", "HImageEditor")
+            val path = BitmapUtils.saveImage(this, saveBitmap)
             HistoryHelper.updateHistoryList(this, path)
         }
 
@@ -137,8 +136,7 @@ class MainActivity : AppCompatActivity() {
         btnSaveImg.isEnabled = true
 
         // Resample the saved image to fit the ImageView
-        val bitmap = BitmapUtils.scalePic(this, photoPath, 160f)
-
+        val bitmap = BitmapUtils.scalePic(this, photoPath, 140f)
 
         // Set the new bitmap to the ImageView
         ivPicture.setImageBitmap(bitmap)

@@ -34,7 +34,7 @@ class ImagesAdapter(
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
         val imgPath = images[position]
         //holder.itemView.resultPic.setImageURI(Uri.parse(imgPath))
-        val bitmap = BitmapUtils.scalePic(holder.itemView.context, imgPath, 160f)
+        val bitmap = BitmapUtils.scalePic(holder.itemView.context, imgPath, 140f)
         holder.itemView.resultPic.setImageBitmap(bitmap)
     }
 

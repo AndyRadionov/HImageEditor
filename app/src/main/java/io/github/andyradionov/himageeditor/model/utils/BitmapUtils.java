@@ -40,6 +40,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
+import io.github.andyradionov.himageeditor.BuildConfig;
 import io.github.andyradionov.himageeditor.R;
 
 public class BitmapUtils {
@@ -219,7 +220,7 @@ public class BitmapUtils {
         String imageFileName = "JPEG_" + timeStamp + ".jpg";
         File storageDir = new File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                        + "/Editor");
+                        + BuildConfig.STORE_DIRECTORY);
         boolean success = true;
         if (!storageDir.exists()) {
             success = storageDir.mkdirs();
