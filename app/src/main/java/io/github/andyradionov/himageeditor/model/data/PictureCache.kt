@@ -24,5 +24,8 @@ object PictureCache {
         tempPictures.add(0, picture)
     }
 
-    fun clearTempPictures() = tempPictures.clear()
+    fun clear() {
+        picture = null
+        tempPictures.clear()
+    }
 }

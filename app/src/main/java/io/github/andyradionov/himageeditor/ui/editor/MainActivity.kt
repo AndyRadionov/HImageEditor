@@ -27,6 +27,7 @@ import io.github.andyradionov.himageeditor.ui.history.HistoryActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 
+private const val IMG_HEIGHT = 140f
 private const val REQUEST_IMAGE_CAPTURE = 1
 private const val REQUEST_STORAGE_PERMISSION = 1
 private const val FILE_PROVIDER_AUTHORITY = "io.github.andyradionov.himageeditor.fileprovider"
@@ -49,12 +50,21 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         initPresenter()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        presenter.detachView()
+    }
+
     override fun onPictureChanged(picture: Picture) {
-        ivPicture.setImageURI(Uri.parse(picture.smallPath))
+        runOnUiThread {
+            ivPicture.setImageURI(Uri.parse(picture.smallPath))
+        }
     }
 
     override fun onTempPicturesChanged() {
-        imagesAdapter.notifyDataSetChanged()
+        runOnUiThread {
+            imagesAdapter.notifyDataSetChanged()
+        }
     }
 
     override fun initState(viewState: Pair<Picture?, ArrayList<Picture>>) {
@@ -62,6 +72,12 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         setupRecycler(viewState.second)
         initListeners()
         showProgress(false)
+    }
+
+    override fun showMsg(msgId: Int) {
+        runOnUiThread {
+            Toast.makeText(this, msgId, Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
@@ -84,7 +100,7 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         // If the image capture activity was called and was successful
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             // Process the image and set it to the TextView
-            presenter.preparePicture(takenPhotoPath)
+            presenter.preparePicture(takenPhotoPath, IMG_HEIGHT)
         } else {
             // Otherwise, delete the temporary image file
             presenter.removeTempPicture(takenPhotoPath)
@@ -106,22 +122,23 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
     }
 
     override fun launchCamera(file: File) {
+        runOnUiThread {
+            val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
 
-        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+            // Get the path of the temporary file
+            takenPhotoPath = file.absolutePath
 
-        // Get the path of the temporary file
-        takenPhotoPath = file.absolutePath
+            // Get the content URI for the image file
+            val photoURI = FileProvider.getUriForFile(this,
+                    FILE_PROVIDER_AUTHORITY,
+                    file)
 
-        // Get the content URI for the image file
-        val photoURI = FileProvider.getUriForFile(this,
-                FILE_PROVIDER_AUTHORITY,
-                file)
+            // Add the URI so the camera can store the image
+            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
 
-        // Add the URI so the camera can store the image
-        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-
-        // Launch the camera activity
-        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
+            // Launch the camera activity
+            startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
+        }
     }
 
     private fun initListeners() {
@@ -141,15 +158,7 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         }
 
         btnSaveImg.setOnClickListener {
-            //presenter.savePicture()
-            // Save the image
-//            val saveBitmap = BitmapUtils.resamplePic(this, photoPath)
-//            BitmapUtils.deleteImageFile(photoPath)
-//            BitmapUtils.deleteTempFiles(images)
-//            images.clear()
-//            imagesAdapter.notifyDataSetChanged()
-//            val path = BitmapUtils.saveImage(this, saveBitmap)
-//            HistoryHelper.updateHistoryList(this, path)
+            presenter.savePicture()
         }
 
         btnRotate.setOnClickListener {

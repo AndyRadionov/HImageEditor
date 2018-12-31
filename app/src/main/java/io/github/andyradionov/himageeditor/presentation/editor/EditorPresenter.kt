@@ -1,8 +1,10 @@
 package io.github.andyradionov.himageeditor.presentation.editor
 
+import io.github.andyradionov.himageeditor.R
 import io.github.andyradionov.himageeditor.model.entity.Picture
 import io.github.andyradionov.himageeditor.model.interactor.Callbacks
 import io.github.andyradionov.himageeditor.model.interactor.EditorInteractor
+import java.io.File
 
 /**
  * @author Andrey Radionov
@@ -15,10 +17,7 @@ class EditorPresenter(
 
     override fun attachView(view: EditorContract.View) {
         this.view = view
-        val viewState = if (!editorInteractor.isCacheEmpty()) {
-            editorInteractor.getCache()
-        } else null to editorInteractor.getCache().second
-        view.initState(viewState)
+        view.initState(getViewState())
     }
 
     override fun detachView() {
@@ -26,16 +25,23 @@ class EditorPresenter(
     }
 
     override fun prepareCamera() {
-        val file = editorInteractor.createPicFile()
-        file?.let { view?.launchCamera(it) }
+        editorInteractor.createPicFile(object : Callbacks.FileSingle {
+            override fun onSuccess(file: File) {
+                view?.launchCamera(file)
+            }
+        })
     }
 
     override fun removeTempPicture(photoPath: String) {
         editorInteractor.removeTempPicture(photoPath)
     }
 
-    override fun preparePicture(photoPath: String) {
-
+    override fun preparePicture(photoPath: String, height: Float) {
+        editorInteractor.preparePicture(photoPath, height, object : Callbacks.PicturesSingle {
+            override fun onSuccess(picture: Picture) {
+                view?.onPictureChanged(picture)
+            }
+        })
     }
 
     override fun setPicture(picture: Picture) {
@@ -60,5 +66,24 @@ class EditorPresenter(
 
     override fun rotate(picturePath: String, height: Float) {
 
+    }
+
+    override fun savePicture() {
+        editorInteractor.savePicture(object: Callbacks.Operation{
+            override fun onFail() {
+                view?.showMsg(R.string.error_message)
+            }
+
+            override fun onSuccess() {
+                view?.showMsg(R.string.saved_message)
+                view?.initState(getViewState())
+            }
+        })
+    }
+
+    private fun getViewState(): Pair<Picture?, ArrayList<Picture>> {
+        return if (!editorInteractor.isCacheEmpty()) {
+            editorInteractor.getCache()
+        } else null to editorInteractor.getCache().second
     }
 }

@@ -43,6 +43,7 @@ import java.util.Locale;
 
 import io.github.andyradionov.himageeditor.BuildConfig;
 import io.github.andyradionov.himageeditor.R;
+import io.github.andyradionov.himageeditor.model.entity.Picture;
 
 public class BitmapUtils {
 
@@ -200,9 +201,10 @@ public class BitmapUtils {
         return imageFile.delete();
     }
 
-    public static boolean deleteTempFiles(List<String> imagePaths) {
-        for (String imagePath: imagePaths) {
-            if (deleteImageFile(imagePath)) return false;
+    public static boolean deleteTempFiles(List<Picture> pictures) {
+        for (Picture picture: pictures) {
+            if (deleteImageFile(picture.getFullPath())) return false;
+            if (deleteImageFile(picture.getSmallPath())) return false;
         }
         return true;
     }

@@ -11,7 +11,7 @@ interface EditorContract {
     interface Presenter {
         fun attachView(view: View)
         fun detachView()
-        fun preparePicture(photoPath: String)
+        fun preparePicture(photoPath: String, height: Float)
         fun setPicture(picture: Picture)
         fun scaleImage(picturePath: String, height: Float)
         fun invertColors(picturePath: String, height: Float)
@@ -19,6 +19,7 @@ interface EditorContract {
         fun rotate(picturePath: String, height: Float)
         fun prepareCamera()
         fun removeTempPicture(photoPath: String)
+        fun savePicture()
     }
 
     interface View {
@@ -26,5 +27,6 @@ interface EditorContract {
         fun onPictureChanged(picture: Picture)
         fun onTempPicturesChanged()
         fun initState(viewState: Pair<Picture?, ArrayList<Picture>>)
+        fun showMsg(msgId: Int)
     }
 }
