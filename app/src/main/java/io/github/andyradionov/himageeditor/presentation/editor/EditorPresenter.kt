@@ -1,8 +1,8 @@
 package io.github.andyradionov.himageeditor.presentation.editor
 
 import io.github.andyradionov.himageeditor.model.entity.Picture
+import io.github.andyradionov.himageeditor.model.interactor.Callbacks
 import io.github.andyradionov.himageeditor.model.interactor.EditorInteractor
-import io.github.andyradionov.himageeditor.model.interactor.PictureCallback
 
 /**
  * @author Andrey Radionov
@@ -25,16 +25,28 @@ class EditorPresenter(
         this.view = null
     }
 
-    override fun setPicture(photoPath: String) {
+    override fun prepareCamera() {
+        val file = editorInteractor.createPicFile()
+        file?.let { view?.launchCamera(it) }
+    }
+
+    override fun removeTempPicture(photoPath: String) {
+        editorInteractor.removeTempPicture(photoPath)
+    }
+
+    override fun preparePicture(photoPath: String) {
+
+    }
+
+    override fun setPicture(picture: Picture) {
 
     }
 
     override fun scaleImage(picturePath: String, height: Float) {
-        editorInteractor.scaleImage(picturePath, height, object: PictureCallback {
+        editorInteractor.scaleImage(picturePath, height, object: Callbacks.PicturesSingle {
             override fun onSuccess(picture: Picture) {
 
             }
-
         })
     }
 
@@ -42,7 +54,11 @@ class EditorPresenter(
 
     }
 
-    override fun flip(picturePath: String, height: Float) {}
+    override fun flip(picturePath: String, height: Float) {
 
-    override fun rotate(picturePath: String, height: Float) {}
+    }
+
+    override fun rotate(picturePath: String, height: Float) {
+
+    }
 }

@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.app.ActivityCompat
@@ -12,6 +13,8 @@ import android.support.v4.content.ContextCompat
 import android.support.v4.content.FileProvider
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.Toast
 import io.github.andyradionov.himageeditor.App
@@ -19,11 +22,10 @@ import io.github.andyradionov.himageeditor.R
 import io.github.andyradionov.himageeditor.model.entity.Picture
 import io.github.andyradionov.himageeditor.ui.common.ImagesAdapter
 import io.github.andyradionov.himageeditor.model.utils.BitmapUtils
-import io.github.andyradionov.himageeditor.model.utils.HistoryHelper
 import io.github.andyradionov.himageeditor.presentation.editor.EditorContract
+import io.github.andyradionov.himageeditor.ui.history.HistoryActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
-import java.io.IOException
 
 private const val REQUEST_IMAGE_CAPTURE = 1
 private const val REQUEST_STORAGE_PERMISSION = 1
@@ -32,11 +34,11 @@ private const val FILE_PROVIDER_AUTHORITY = "io.github.andyradionov.himageeditor
 class MainActivity : AppCompatActivity(), EditorContract.View {
 
     private lateinit var presenter: EditorContract.Presenter
+    private var takenPhotoPath: String = ""
     private lateinit var imagesAdapter: ImagesAdapter
-    private val imageClickListener = object: ImagesAdapter.ImageClickListener {
-        override fun onClick(imagePath: String) {
-            presenter.setPicture(imagePath)
-            processAndSetImage()
+    private val imageClickListener = object : ImagesAdapter.ImageClickListener {
+        override fun onClick(picture: Picture) {
+            presenter.setPicture(picture)
         }
     }
 
@@ -45,20 +47,21 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         setContentView(R.layout.activity_main)
 
         initPresenter()
-        setupRecycler()
-        initListeners()
     }
 
     override fun onPictureChanged(picture: Picture) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        ivPicture.setImageURI(Uri.parse(picture.smallPath))
     }
 
     override fun onTempPicturesChanged() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        imagesAdapter.notifyDataSetChanged()
     }
 
     override fun initState(viewState: Pair<Picture?, ArrayList<Picture>>) {
-
+        viewState.first?.let { onPictureChanged(it) }
+        setupRecycler(viewState.second)
+        initListeners()
+        showProgress(false)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
@@ -68,7 +71,7 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
             REQUEST_STORAGE_PERMISSION -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     // If you get permission, launch the camera
-                    launchCamera()
+                    prepareCamera()
                 } else {
                     // If you do not get permission, show a Toast
                     Toast.makeText(this, R.string.permission_denied, Toast.LENGTH_SHORT).show()
@@ -81,12 +84,44 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         // If the image capture activity was called and was successful
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             // Process the image and set it to the TextView
-            processAndSetImage()
+            presenter.preparePicture(takenPhotoPath)
         } else {
-
             // Otherwise, delete the temporary image file
+            presenter.removeTempPicture(takenPhotoPath)
             //BitmapUtils.deleteImageFile(photoPath)
         }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main, menu)
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(menuItem: MenuItem): Boolean {
+        if (menuItem.itemId == R.id.actionHistory) {
+            startActivity(Intent(this, HistoryActivity::class.java))
+            return true
+        }
+        return super.onOptionsItemSelected(menuItem)
+    }
+
+    override fun launchCamera(file: File) {
+
+        val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+
+        // Get the path of the temporary file
+        takenPhotoPath = file.absolutePath
+
+        // Get the content URI for the image file
+        val photoURI = FileProvider.getUriForFile(this,
+                FILE_PROVIDER_AUTHORITY,
+                file)
+
+        // Add the URI so the camera can store the image
+        takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
+
+        // Launch the camera activity
+        startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
     }
 
     private fun initListeners() {
@@ -101,12 +136,12 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
                         REQUEST_STORAGE_PERMISSION)
             } else {
                 // Launch the camera if the permission exists
-                launchCamera()
+                prepareCamera()
             }
         }
 
         btnSaveImg.setOnClickListener {
-
+            //presenter.savePicture()
             // Save the image
 //            val saveBitmap = BitmapUtils.resamplePic(this, photoPath)
 //            BitmapUtils.deleteImageFile(photoPath)
@@ -138,23 +173,7 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
 //        imagesAdapter.notifyDataSetChanged()
     }
 
-    /**
-     * Method for processing the captured image and setting it to the ImageView.
-     */
-    private fun processAndSetImage() {
-
-        // Toggle Visibility of the views
-        showProgress(false)
-
-        // Resample the saved image to fit the ImageView
-        //val bitmap = BitmapUtils.scalePic(this, photoPath, 140f)
-
-        // Set the new bitmap to the ImageView
-        //ivPicture.setImageBitmap(bitmap)
-    }
-
-
-    private fun launchCamera() {
+    private fun prepareCamera() {
 
         // Create the capture image intent
         val takePictureIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
@@ -162,41 +181,18 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         // Ensure that there's a camera activity to handle the intent
         if (takePictureIntent.resolveActivity(packageManager) != null) {
             // Create the temporary File where the photo should go
-            var photoFile: File? = null
-            try {
-                photoFile = BitmapUtils.createTempImageFile(this)
-            } catch (ex: IOException) {
-                // Error occurred while creating the File
-                ex.printStackTrace()
-            }
-
-            // Continue only if the File was successfully created
-            if (photoFile != null) {
-
-                // Get the path of the temporary file
-                //photoPath = photoFile.absolutePath
-
-                // Get the content URI for the image file
-                val photoURI = FileProvider.getUriForFile(this,
-                        FILE_PROVIDER_AUTHORITY,
-                        photoFile)
-
-                // Add the URI so the camera can store the image
-                takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI)
-
-                // Launch the camera activity
-                startActivityForResult(takePictureIntent, REQUEST_IMAGE_CAPTURE)
-            }
+            presenter.prepareCamera()
         }
     }
 
     private fun initPresenter() {
+        showProgress()
         presenter = App.editorPresenter
         presenter.attachView(this)
     }
 
-    private fun setupRecycler() {
-        //imagesAdapter = ImagesAdapter(imageClickListener, images)
+    private fun setupRecycler(pictures: List<Picture>) {
+        imagesAdapter = ImagesAdapter(imageClickListener, pictures)
 
         val layoutManager = LinearLayoutManager(this)
         recycler.adapter = imagesAdapter

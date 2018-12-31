@@ -37,7 +37,13 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <activity android:name=".ui.history.HistoryActivity"></activity>
+        <activity
+            android:name=".ui.history.HistoryActivity"
+            android:parentActivityName=".ui.editor.MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".ui.editor.MainActivity" />
+        </activity>
     </application>
 
 </manifest>

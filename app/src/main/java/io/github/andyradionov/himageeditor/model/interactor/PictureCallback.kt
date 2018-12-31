@@ -5,6 +5,12 @@ import io.github.andyradionov.himageeditor.model.entity.Picture
 /**
  * @author Andrey Radionov
  */
-interface PictureCallback {
-    fun onSuccess(picture: Picture)
+interface Callbacks {
+    interface PicturesSingle {
+        fun onSuccess(picture: Picture)
+    }
+
+    interface PicturesList {
+        fun onSuccess(pictures: List<Picture>)
+    }
 }

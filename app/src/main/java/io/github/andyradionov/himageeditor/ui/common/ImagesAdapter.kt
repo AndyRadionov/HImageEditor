@@ -1,11 +1,13 @@
 package io.github.andyradionov.himageeditor.ui.common
 
+import android.net.Uri
 import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import io.github.andyradionov.himageeditor.R
+import io.github.andyradionov.himageeditor.model.entity.Picture
 import io.github.andyradionov.himageeditor.model.utils.BitmapUtils
 import kotlinx.android.synthetic.main.item_image.view.*
 
@@ -14,11 +16,11 @@ import kotlinx.android.synthetic.main.item_image.view.*
  * @author Andrey Radionov
  */
 class ImagesAdapter(
-        private val imageClickListener: ImageClickListener, private val images: List<String>
+        private val imageClickListener: ImageClickListener?, private val pictures: List<Picture>
 ): RecyclerView.Adapter<ImagesAdapter.ImageViewHolder>() {
 
     interface ImageClickListener {
-        fun onClick(imagePath: String)
+        fun onClick(picture: Picture)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageViewHolder {
@@ -28,14 +30,12 @@ class ImagesAdapter(
     }
 
     override fun getItemCount(): Int {
-        return images.size
+        return pictures.size
     }
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) {
-        val imgPath = images[position]
-        //holder.itemView.resultPic.setImageURI(Uri.parse(imgPath))
-        val bitmap = BitmapUtils.scalePic(holder.itemView.context, imgPath, 140f)
-        holder.itemView.resultPic.setImageBitmap(bitmap)
+        val picture = pictures[position]
+        holder.itemView.resultPic.setImageURI(Uri.parse(picture.smallPath))
     }
 
     inner class ImageViewHolder(itemView: View): RecyclerView.ViewHolder(itemView),
@@ -46,7 +46,7 @@ class ImagesAdapter(
         }
 
         override fun onClick(v: View?) {
-            imageClickListener.onClick(images[adapterPosition])
+            imageClickListener?.onClick(pictures[adapterPosition])
         }
     }
 }
