@@ -4,7 +4,6 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,9 +19,8 @@ import android.widget.Toast
 import io.github.andyradionov.himageeditor.App
 import io.github.andyradionov.himageeditor.R
 import io.github.andyradionov.himageeditor.model.entity.Picture
-import io.github.andyradionov.himageeditor.ui.common.ImagesAdapter
-import io.github.andyradionov.himageeditor.model.utils.BitmapUtils
 import io.github.andyradionov.himageeditor.presentation.editor.EditorContract
+import io.github.andyradionov.himageeditor.ui.common.ImagesAdapter
 import io.github.andyradionov.himageeditor.ui.history.HistoryActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File

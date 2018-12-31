@@ -1,6 +1,7 @@
 package io.github.andyradionov.himageeditor.model.interactor
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Message
@@ -72,23 +73,13 @@ class EditorInteractor(private val context: Context) {
 
     fun setPicture(picture: Picture) {
         cache.setPicture(picture)
-    }
-
-    private fun scale(picturePath: String, height: Float): String? {
-        val bitmap = BitmapUtils.scalePic(context, picturePath, height)
-        return BitmapUtils.saveTempBitmap(context, bitmap)
+        cache.removeSettedPicture(picture)
     }
 
     fun invert(height: Float, callback: Callbacks.Operation) {
         object : Handler(Loopers.backgroundLooper) {
             override fun handleMessage(msg: Message?) {
-                val bitmap = BitmapUtils.scalePic(context, cache.getPicture()?.fullPath, height)
-                val convert = BitmapUtils.invertColors(bitmap)
-                val fullPath = BitmapUtils.saveTempBitmap(context, convert)
-                val smallBitmap = BitmapUtils.scalePic(context, fullPath, height)
-                val smallPath = BitmapUtils.saveTempBitmap(context, smallBitmap)
-                cache.addTempPicture(Picture(fullPath, smallPath))
-                callback.onSuccess()
+                convert(height, callback) { bitmap -> BitmapUtils.invertColors(bitmap) }
             }
         }.sendEmptyMessage(0)
     }
@@ -96,7 +87,7 @@ class EditorInteractor(private val context: Context) {
     fun flip(height: Float, callback: Callbacks.Operation) {
         object : Handler(Loopers.backgroundLooper) {
             override fun handleMessage(msg: Message?) {
-
+                convert(height, callback) { bitmap -> BitmapUtils.flip(bitmap) }
             }
         }.sendEmptyMessage(0)
     }
@@ -104,12 +95,22 @@ class EditorInteractor(private val context: Context) {
     fun rotate(height: Float, callback: Callbacks.Operation) {
         object : Handler(Loopers.backgroundLooper) {
             override fun handleMessage(msg: Message?) {
-
+                convert(height, callback) { bitmap -> BitmapUtils.rotate(bitmap) }
             }
         }.sendEmptyMessage(0)
     }
 
     fun clear() {
         cache.clear()
+    }
+
+    private fun convert(height: Float, callback: Callbacks.Operation, operation: (bitmap: Bitmap) -> Bitmap) {
+        val bitmap = BitmapUtils.scalePic(context, cache.getPicture()?.fullPath, height)
+        val convert = operation(bitmap)
+        val fullPath = BitmapUtils.saveTempBitmap(context, convert)
+        val smallBitmap = BitmapUtils.scalePic(context, fullPath, height)
+        val smallPath = BitmapUtils.saveTempBitmap(context, smallBitmap)
+        cache.addTempPicture(Picture(fullPath, smallPath))
+        callback.onSuccess()
     }
 }

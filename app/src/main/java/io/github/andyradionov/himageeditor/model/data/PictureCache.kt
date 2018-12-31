@@ -28,4 +28,8 @@ object PictureCache {
         picture = null
         tempPictures.clear()
     }
+
+    fun removeSettedPicture(picture: Picture) {
+        tempPictures.remove(picture)
+    }
 }
