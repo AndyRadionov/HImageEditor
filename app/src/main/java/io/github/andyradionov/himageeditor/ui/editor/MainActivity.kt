@@ -55,9 +55,15 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         presenter.detachView()
     }
 
-    override fun onPictureChanged(picture: Picture) {
+    override fun onPictureChanged(picture: Picture?) {
         runOnUiThread {
-            ivPicture.setImageURI(Uri.parse(picture.smallPath))
+            if (picture == null) {
+                showProgress(false, false)
+                ivPicture.setImageResource(R.drawable.ic_image_black_24dp)
+            } else {
+                showProgress(true, false)
+                ivPicture.setImageURI(Uri.parse(picture.smallPath))
+            }
         }
     }
 
@@ -68,10 +74,11 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
     }
 
     override fun initState(viewState: Pair<Picture?, ArrayList<Picture>>) {
-        viewState.first?.let { onPictureChanged(it) }
-        setupRecycler(viewState.second)
-        initListeners()
-        showProgress(false)
+        onPictureChanged(viewState.first)
+        runOnUiThread {
+            setupRecycler(viewState.second)
+            initListeners()
+        }
     }
 
     override fun showMsg(msgId: Int) {
@@ -144,6 +151,7 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
     private fun initListeners() {
 
         btnTakePic.setOnClickListener {
+            presenter.clear()
             if (ContextCompat.checkSelfPermission(this,
                             Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
 
@@ -162,24 +170,16 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         }
 
         btnRotate.setOnClickListener {
-            processClick { bitmap -> BitmapUtils.rotate(bitmap) }
+            presenter.rotate(IMG_HEIGHT)
         }
 
         btnMirror.setOnClickListener {
-            processClick { bitmap -> BitmapUtils.flip(bitmap) }
+            presenter.flip(IMG_HEIGHT)
         }
 
         btnInvert.setOnClickListener {
-            processClick { bitmap -> BitmapUtils.invertColors(bitmap) }
+            presenter.invertColors(IMG_HEIGHT)
         }
-    }
-
-    private fun processClick(func: (bitmap: Bitmap) -> Bitmap) {
-//        val bitmap = BitmapUtils.resamplePic(this, photoPath)
-//        val processedBitmap = func(bitmap)
-//        val path = BitmapUtils.saveTempBitmap(this, processedBitmap)
-//        images.add(0, path)
-//        imagesAdapter.notifyDataSetChanged()
     }
 
     private fun prepareCamera() {
@@ -208,12 +208,11 @@ class MainActivity : AppCompatActivity(), EditorContract.View {
         recycler.layoutManager = layoutManager
     }
 
-    private fun showProgress(showProgress: Boolean = true) {
-        btnInvert.isEnabled = !showProgress
-        btnRotate.isEnabled = !showProgress
-        btnMirror.isEnabled = !showProgress
-        btnSaveImg.isEnabled = !showProgress
-        btnTakePic.isEnabled = !showProgress
+    private fun showProgress(enableButtons: Boolean = false, showProgress: Boolean = true) {
+        btnInvert.isEnabled = enableButtons
+        btnRotate.isEnabled = enableButtons
+        btnMirror.isEnabled = enableButtons
+        btnSaveImg.isEnabled = enableButtons
         pbLoading.visibility = if (showProgress) View.VISIBLE else View.INVISIBLE
     }
 }

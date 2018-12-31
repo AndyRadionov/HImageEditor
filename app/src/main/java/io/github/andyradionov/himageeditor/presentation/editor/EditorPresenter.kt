@@ -45,27 +45,44 @@ class EditorPresenter(
     }
 
     override fun setPicture(picture: Picture) {
-
+        editorInteractor.setPicture(picture)
+        view?.onPictureChanged(picture)
     }
 
-    override fun scaleImage(picturePath: String, height: Float) {
-        editorInteractor.scaleImage(picturePath, height, object: Callbacks.PicturesSingle {
-            override fun onSuccess(picture: Picture) {
+    override fun invertColors(height: Float) {
+        editorInteractor.invert(height, object : Callbacks.Operation {
+            override fun onSuccess() {
+                view?.onTempPicturesChanged()
+            }
 
+            override fun onFail() {
+                view?.showMsg(R.string.error_message)
             }
         })
     }
 
-    override fun invertColors(picturePath: String, height: Float) {
+    override fun flip(height: Float) {
+        editorInteractor.flip(height, object : Callbacks.Operation {
+            override fun onSuccess() {
+                view?.onTempPicturesChanged()
+            }
 
+            override fun onFail() {
+                view?.showMsg(R.string.error_message)
+            }
+        })
     }
 
-    override fun flip(picturePath: String, height: Float) {
+    override fun rotate(height: Float) {
+        editorInteractor.rotate(height, object : Callbacks.Operation {
+            override fun onSuccess() {
+                view?.onTempPicturesChanged()
+            }
 
-    }
-
-    override fun rotate(picturePath: String, height: Float) {
-
+            override fun onFail() {
+                view?.showMsg(R.string.error_message)
+            }
+        })
     }
 
     override fun savePicture() {
@@ -79,6 +96,10 @@ class EditorPresenter(
                 view?.initState(getViewState())
             }
         })
+    }
+
+    override fun clear() {
+        editorInteractor.clear()
     }
 
     private fun getViewState(): Pair<Picture?, ArrayList<Picture>> {

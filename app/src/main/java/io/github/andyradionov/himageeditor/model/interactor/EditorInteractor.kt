@@ -31,16 +31,6 @@ class EditorInteractor(private val context: Context) {
         }.sendEmptyMessage(0)
     }
 
-    fun scaleImage(picturePath: String, height: Float, pictureCallback: Callbacks.PicturesSingle) {
-        object : Handler(Loopers.backgroundLooper) {
-            override fun handleMessage(msg: Message?) {
-                val bitmap = BitmapUtils.scalePic(context, picturePath, height)
-                val smallPath = BitmapUtils.saveTempBitmap(context, bitmap)
-                pictureCallback.onSuccess(Picture(picturePath, smallPath))
-            }
-        }.sendEmptyMessage(0)
-    }
-
     fun removeTempPicture(photoPath: String) {
         object : Handler(Loopers.backgroundLooper) {
             override fun handleMessage(msg: Message?) {
@@ -54,7 +44,9 @@ class EditorInteractor(private val context: Context) {
             override fun handleMessage(msg: Message?) {
                 val bitmap = BitmapUtils.scalePic(context, photoPath, imgHeightDp)
                 val smallPath = BitmapUtils.saveTempBitmap(context, bitmap)
-                callback.onSuccess(Picture(photoPath, smallPath))
+                val picture = Picture(photoPath, smallPath)
+                cache.setPicture(picture)
+                callback.onSuccess(picture)
             }
         }.sendEmptyMessage(0)
     }
@@ -69,12 +61,55 @@ class EditorInteractor(private val context: Context) {
                     val saveBitmap = BitmapUtils.resamplePic(context, photoPath)
                     BitmapUtils.deleteImageFile(photoPath)
                     BitmapUtils.deleteTempFiles(cache.getTempPictures())
-                    cache.clear()
                     BitmapUtils.saveImage(context, saveBitmap)
                     HistoryHelper.updateHistoryList(context, cache.getPicture()!!)
+                    cache.clear()
                     operation.onSuccess()
                 }
             }.sendEmptyMessage(0)
         }
+    }
+
+    fun setPicture(picture: Picture) {
+        cache.setPicture(picture)
+    }
+
+    private fun scale(picturePath: String, height: Float): String? {
+        val bitmap = BitmapUtils.scalePic(context, picturePath, height)
+        return BitmapUtils.saveTempBitmap(context, bitmap)
+    }
+
+    fun invert(height: Float, callback: Callbacks.Operation) {
+        object : Handler(Loopers.backgroundLooper) {
+            override fun handleMessage(msg: Message?) {
+                val bitmap = BitmapUtils.scalePic(context, cache.getPicture()?.fullPath, height)
+                val convert = BitmapUtils.invertColors(bitmap)
+                val fullPath = BitmapUtils.saveTempBitmap(context, convert)
+                val smallBitmap = BitmapUtils.scalePic(context, fullPath, height)
+                val smallPath = BitmapUtils.saveTempBitmap(context, smallBitmap)
+                cache.addTempPicture(Picture(fullPath, smallPath))
+                callback.onSuccess()
+            }
+        }.sendEmptyMessage(0)
+    }
+
+    fun flip(height: Float, callback: Callbacks.Operation) {
+        object : Handler(Loopers.backgroundLooper) {
+            override fun handleMessage(msg: Message?) {
+
+            }
+        }.sendEmptyMessage(0)
+    }
+
+    fun rotate(height: Float, callback: Callbacks.Operation) {
+        object : Handler(Loopers.backgroundLooper) {
+            override fun handleMessage(msg: Message?) {
+
+            }
+        }.sendEmptyMessage(0)
+    }
+
+    fun clear() {
+        cache.clear()
     }
 }

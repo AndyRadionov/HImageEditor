@@ -13,18 +13,18 @@ interface EditorContract {
         fun detachView()
         fun preparePicture(photoPath: String, height: Float)
         fun setPicture(picture: Picture)
-        fun scaleImage(picturePath: String, height: Float)
-        fun invertColors(picturePath: String, height: Float)
-        fun flip(picturePath: String, height: Float)
-        fun rotate(picturePath: String, height: Float)
+        fun invertColors(height: Float)
+        fun flip(height: Float)
+        fun rotate(height: Float)
         fun prepareCamera()
         fun removeTempPicture(photoPath: String)
         fun savePicture()
+        fun clear()
     }
 
     interface View {
         fun launchCamera(file: File)
-        fun onPictureChanged(picture: Picture)
+        fun onPictureChanged(picture: Picture?)
         fun onTempPicturesChanged()
         fun initState(viewState: Pair<Picture?, ArrayList<Picture>>)
         fun showMsg(msgId: Int)
