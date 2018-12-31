@@ -19,7 +19,7 @@ object HistoryHelper {
         val defSet = HashSet<String>()
         val history = sharedPrefs.getStringSet(context.getString(R.string.history_key), defSet) as Set<String>
         val result = history.map { s -> Picture(s,String.format(SMALL_PATH, s)) }.toMutableList()
-        result.sortDescending()
+        //result.sortDescending()
         return result
     }
 

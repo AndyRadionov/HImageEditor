@@ -14,10 +14,13 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.view.View
 import android.widget.Toast
+import io.github.andyradionov.himageeditor.App
 import io.github.andyradionov.himageeditor.R
+import io.github.andyradionov.himageeditor.model.entity.Picture
 import io.github.andyradionov.himageeditor.ui.common.ImagesAdapter
 import io.github.andyradionov.himageeditor.model.utils.BitmapUtils
 import io.github.andyradionov.himageeditor.model.utils.HistoryHelper
+import io.github.andyradionov.himageeditor.presentation.editor.EditorContract
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
 import java.io.IOException
@@ -26,14 +29,13 @@ private const val REQUEST_IMAGE_CAPTURE = 1
 private const val REQUEST_STORAGE_PERMISSION = 1
 private const val FILE_PROVIDER_AUTHORITY = "io.github.andyradionov.himageeditor.fileprovider"
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), EditorContract.View {
 
-    private var photoPath: String? = null
-    private val images = ArrayList<String>()
+    private lateinit var presenter: EditorContract.Presenter
     private lateinit var imagesAdapter: ImagesAdapter
     private val imageClickListener = object: ImagesAdapter.ImageClickListener {
         override fun onClick(imagePath: String) {
-            photoPath = imagePath
+            presenter.setPicture(imagePath)
             processAndSetImage()
         }
     }
@@ -42,8 +44,21 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        initPresenter()
         setupRecycler()
         initListeners()
+    }
+
+    override fun onPictureChanged(picture: Picture) {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun onTempPicturesChanged() {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun initState(viewState: Pair<Picture?, ArrayList<Picture>>) {
+
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>,
@@ -66,12 +81,11 @@ class MainActivity : AppCompatActivity() {
         // If the image capture activity was called and was successful
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == Activity.RESULT_OK) {
             // Process the image and set it to the TextView
-            btnTakePic.visibility = View.INVISIBLE
             processAndSetImage()
         } else {
 
             // Otherwise, delete the temporary image file
-            BitmapUtils.deleteImageFile(photoPath)
+            //BitmapUtils.deleteImageFile(photoPath)
         }
     }
 
@@ -94,13 +108,13 @@ class MainActivity : AppCompatActivity() {
         btnSaveImg.setOnClickListener {
 
             // Save the image
-            val saveBitmap = BitmapUtils.resamplePic(this, photoPath)
-            BitmapUtils.deleteImageFile(photoPath)
-            BitmapUtils.deleteTempFiles(images)
-            images.clear()
-            imagesAdapter.notifyDataSetChanged()
-            val path = BitmapUtils.saveImage(this, saveBitmap)
-            HistoryHelper.updateHistoryList(this, path)
+//            val saveBitmap = BitmapUtils.resamplePic(this, photoPath)
+//            BitmapUtils.deleteImageFile(photoPath)
+//            BitmapUtils.deleteTempFiles(images)
+//            images.clear()
+//            imagesAdapter.notifyDataSetChanged()
+//            val path = BitmapUtils.saveImage(this, saveBitmap)
+//            HistoryHelper.updateHistoryList(this, path)
         }
 
         btnRotate.setOnClickListener {
@@ -117,11 +131,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun processClick(func: (bitmap: Bitmap) -> Bitmap) {
-        val bitmap = BitmapUtils.resamplePic(this, photoPath)
-        val processedBitmap = func(bitmap)
-        val path = BitmapUtils.saveTempBitmap(this, processedBitmap)
-        images.add(0, path)
-        imagesAdapter.notifyDataSetChanged()
+//        val bitmap = BitmapUtils.resamplePic(this, photoPath)
+//        val processedBitmap = func(bitmap)
+//        val path = BitmapUtils.saveTempBitmap(this, processedBitmap)
+//        images.add(0, path)
+//        imagesAdapter.notifyDataSetChanged()
     }
 
     /**
@@ -130,16 +144,13 @@ class MainActivity : AppCompatActivity() {
     private fun processAndSetImage() {
 
         // Toggle Visibility of the views
-        btnInvert.isEnabled = true
-        btnRotate.isEnabled = true
-        btnMirror.isEnabled = true
-        btnSaveImg.isEnabled = true
+        showProgress(false)
 
         // Resample the saved image to fit the ImageView
-        val bitmap = BitmapUtils.scalePic(this, photoPath, 140f)
+        //val bitmap = BitmapUtils.scalePic(this, photoPath, 140f)
 
         // Set the new bitmap to the ImageView
-        ivPicture.setImageBitmap(bitmap)
+        //ivPicture.setImageBitmap(bitmap)
     }
 
 
@@ -163,7 +174,7 @@ class MainActivity : AppCompatActivity() {
             if (photoFile != null) {
 
                 // Get the path of the temporary file
-                photoPath = photoFile.absolutePath
+                //photoPath = photoFile.absolutePath
 
                 // Get the content URI for the image file
                 val photoURI = FileProvider.getUriForFile(this,
@@ -179,11 +190,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initPresenter() {
+        presenter = App.editorPresenter
+        presenter.attachView(this)
+    }
+
     private fun setupRecycler() {
-        imagesAdapter = ImagesAdapter(imageClickListener, images)
+        //imagesAdapter = ImagesAdapter(imageClickListener, images)
 
         val layoutManager = LinearLayoutManager(this)
         recycler.adapter = imagesAdapter
         recycler.layoutManager = layoutManager
+    }
+
+    private fun showProgress(showProgress: Boolean = true) {
+        btnInvert.isEnabled = !showProgress
+        btnRotate.isEnabled = !showProgress
+        btnMirror.isEnabled = !showProgress
+        btnSaveImg.isEnabled = !showProgress
+        btnTakePic.isEnabled = !showProgress
+        pbLoading.visibility = if (showProgress) View.VISIBLE else View.INVISIBLE
     }
 }

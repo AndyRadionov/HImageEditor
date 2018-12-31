@@ -8,7 +8,7 @@ import android.os.Looper
  */
 object Loopers {
     val backgroundLooper: Looper
-
+    val uiLooper = Looper.getMainLooper()
     init {
         val backgroundThread = HandlerThread("backgroundThread")
         backgroundThread.start()
